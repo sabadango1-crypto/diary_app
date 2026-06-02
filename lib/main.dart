@@ -13,7 +13,6 @@ class MyApp extends StatelessWidget {
       title: '龍馬の日記＆激励アプリ',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // 高齢者の方が見やすいよう、温かみのある和風の茶色とオレンジを基調にしました
         primarySwatch: Colors.amber,
         scaffoldBackgroundColor: const Color(0xFFF7F5F0), // 目に優しい薄い和紙のような色
         fontFamily: 'sans-serif',
@@ -49,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 画面の切り替え（0: 日記、1: 龍馬に相談）
     final List<Widget> pages = [
       _buildDiaryPage(),
       const RyomaConsultationPage(),
@@ -91,7 +89,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 日記ページの見た目
   Widget _buildDiaryPage() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -158,7 +155,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ⚔️ 坂本龍馬の相談ページ
 class RyomaConsultationPage extends StatefulWidget {
   const RyomaConsultationPage({super.key});
 
@@ -170,7 +166,6 @@ class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
   final TextEditingController _chatController = TextEditingController();
   String _ryomaResponse = 'おう、待っとったぞ！悩みがあるなら、何でもワシに言うてみぃ！日本の夜明けは近いぜよ！';
 
-  // 龍馬さんが言葉を判断して返事を決める仕組み
   void _getRyomaResponse() {
     String text = _chatController.text;
     if (text.isEmpty) return;
@@ -203,7 +198,6 @@ class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 龍馬さんの見た目（侍アイコンとメッセージ）
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -214,10 +208,13 @@ class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.brown[800],
-                    radius: 30,
-                    child: const Icon(Icons.accessibility_new, size: 35, color: Colors.white), // 侍の立ち姿をイメージ
+                  // ★ここをオリジナルの写真（龍馬さん）が表示されるように丸ごと書き換えました！
+                  const CircleAvatar(
+                    radius: 35,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: NetworkImage(
+                      'https://upload.wikimedia.org/wikipedia/commons/3/3a/Sakamoto_Ryoma_classic_standing_pose.jpg'
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
