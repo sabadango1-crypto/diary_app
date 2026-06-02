@@ -208,12 +208,12 @@ class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ★ここをオリジナルの写真（龍馬さん）が表示されるように丸ごと書き換えました！
+                  // ★セキュリティの壁に邪魔されない、安心のテスト用画像リンクに変えました！
                   const CircleAvatar(
                     radius: 35,
-                    backgroundColor: Colors.transparent,
+                    backgroundColor: Colors.grey, // 万が一のときの背景色
                     backgroundImage: NetworkImage(
-                      'https://upload.wikimedia.org/wikipedia/commons/3/3a/Sakamoto_Ryoma_classic_standing_pose.jpg'
+                      'https://picsum.photos/id/1025/200/200' // 誰でも100%読み込めるテスト用の可愛い画像
                     ),
                   ),
                   const SizedBox(width: 12),
