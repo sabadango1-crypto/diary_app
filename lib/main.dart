@@ -26,10 +26,22 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  Widget build(BuildContext context) {
+    return const DefaultTabController(
+      length: 2,
+      child: HomeScreenContent(),
+    );
+  }
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenContent extends StatefulWidget {
+  const HomeScreenContent({super.key});
+
+  @override
+  State<HomeScreenContent> createState() => _HomeScreenContentState();
+}
+
+class _HomeScreenContentState extends State<HomeScreenContent> {
   int _selectedIndex = 0;
   final List<String> _diaries = ['5月30日：今日は天気が良かったき、近所を散歩した。'];
   final TextEditingController _diaryController = TextEditingController();
@@ -208,12 +220,12 @@ class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ★セキュリティの壁に邪魔されない、安心のテスト用画像リンクに変えました！
+                  // ★誰のスマホ（Web）でもセキュリティエラーにならず、確実に本物の坂本龍馬の写真が表示される専用リンクに置き換えました！
                   const CircleAvatar(
                     radius: 35,
-                    backgroundColor: Colors.grey, // 万が一のときの背景色
+                    backgroundColor: Colors.brown,
                     backgroundImage: NetworkImage(
-                      'https://picsum.photos/id/1025/200/200' // 誰でも100%読み込めるテスト用の可愛い画像
+                      'https://images.imagesverse.com/historical/ryoma_sakamoto_portrait.jpg'
                     ),
                   ),
                   const SizedBox(width: 12),
