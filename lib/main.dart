@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 void main() {
   runApp(const MyApp());
@@ -11,43 +10,62 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '日記＆激励アプリ',
+      title: '龍馬の日記＆激励アプリ',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.teal,
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(fontSize: 24),
-        ),
+        // 高齢者の方が見やすいよう、温かみのある和風の茶色とオレンジを基調にしました
+        primarySwatch: Colors.amber,
+        scaffoldBackgroundColor: const Color(0xFFF7F5F0), // 目に優しい薄い和紙のような色
+        fontFamily: 'sans-serif',
       ),
-      home: const MainBottomNavigation(),
+      home: const HomeScreen(),
     );
   }
 }
 
-// -----------------------------------------
-// アプリの土台：下のボタンで画面を切り替える仕組み
-// -----------------------------------------
-class MainBottomNavigation extends StatefulWidget {
-  const MainBottomNavigation({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<MainBottomNavigation> createState() => _MainBottomNavigationState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-List<Map<String, String>> savedDiaries = [];
-
-class _MainBottomNavigationState extends State<MainBottomNavigation> {
+class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final List<String> _diaries = ['5月30日：今日は天気が良かったき、近所を散歩した。'];
+  final TextEditingController _diaryController = TextEditingController();
 
-  final List<Widget> _screens = [
-    const DiaryInputScreen(),
-    const DiaryHistoryScreen(),
-    const ConsultationScreen(), // おはなし相談画面
-  ];
+  void _addDiary() {
+    if (_diaryController.text.isNotEmpty) {
+      setState(() {
+        _diaries.insert(0, _diaryController.text);
+        _diaryController.clear();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('日記を記録したぜよ！')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    // 画面の切り替え（0: 日記、1: 龍馬に相談）
+    final List<Widget> pages = [
+      _buildDiaryPage(),
+      const RyomaConsultationPage(),
+    ];
+
     return Scaffold(
-      body: _screens[_selectedIndex],
+      appBar: AppBar(
+        title: Text(
+          _selectedIndex == 0 ? '💻 龍馬の思い出日記帳' : '⚔️ 龍馬の激励おはなし室',
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.brown[700],
+        foregroundColor: Colors.white,
+        centerTitle: true,
+      ),
+      body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -55,310 +73,200 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
             _selectedIndex = index;
           });
         },
+        selectedItemColor: Colors.amber[900],
+        unselectedItemColor: Colors.grey[600],
         selectedFontSize: 16,
-        unselectedFontSize: 13,
-        selectedItemColor: Colors.teal,
-        type: BottomNavigationBarType.fixed,
+        unselectedFontSize: 14,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.edit, size: 28), label: '日記を書く'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_month, size: 28), label: '振り返る'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat, size: 28), label: '相談する'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book, size: 30),
+            label: '日記を書く',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat, size: 30),
+            label: '龍馬に相談',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 日記ページの見た目
+  Widget _buildDiaryPage() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            '今日あったことや気持ちを書き残そう',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _diaryController,
+            maxLines: 4,
+            style: const TextStyle(fontSize: 18),
+            decoration: InputDecoration(
+              hintText: 'ここに文字を入力してください…',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: _addDiary,
+            icon: const Icon(Icons.edit, color: Colors.white),
+            label: const Text('日記を保存する', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.brown[600],
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'これまでの思い出の一コマ',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.brown),
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: _diaries.isEmpty
+                ? const Center(child: Text('まだ日記がありません', style: TextStyle(fontSize: 16)))
+                : ListView.builder(
+                    itemCount: _diaries.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            _diaries[index],
+                            style: const TextStyle(fontSize: 18, height: 1.5),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
         ],
       ),
     );
   }
 }
 
-// -----------------------------------------
-// 画面1：日記を書く ＆ ランダム激励画面
-// -----------------------------------------
-class DiaryInputScreen extends StatefulWidget {
-  const DiaryInputScreen({super.key});
+// ⚔️ 坂本龍馬の相談ページ
+class RyomaConsultationPage extends StatefulWidget {
+  const RyomaConsultationPage({super.key});
 
   @override
-  State<DiaryInputScreen> createState() => _DiaryInputScreenState();
+  State<RyomaConsultationPage> createState() => _RyomaConsultationPageState();
 }
 
-class _DiaryInputScreenState extends State<DiaryInputScreen> {
-  final TextEditingController _controller = TextEditingController();
-  String _praiseMessage = '';
+class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
+  final TextEditingController _chatController = TextEditingController();
+  String _ryomaResponse = 'おう、待っとったぞ！悩みがあるなら、何でもワシに言うてみぃ！日本の夜明けは近いぜよ！';
 
-  final List<String> _praiseList = [
-    '素晴らしい日記ですね！今日も一日、本当にお疲れ様でした。😊',
-    '今日も一歩前進ですね！あなたのペースで歩む姿、とても素敵です。✨',
-    '日記に書いた素敵な思い出、宝物ですね。明日も良い日になりますように。🍀',
-    '今日も日記を続けられたあなたに大拍手です！素晴らしい継続力ですね！👏',
-    '心温まるお話をありがとうございます。今夜はゆっくり休んでくださいね。🌙',
-  ];
+  // 龍馬さんが言葉を判断して返事を決める仕組み
+  void _getRyomaResponse() {
+    String text = _chatController.text;
+    if (text.isEmpty) return;
 
-  void _saveDiary() {
+    String response = '';
+
+    if (text.contains('寂しい') || text.contains('さびしい') || text.contains('一人')) {
+      response = '何をおうちゅう（何を言っているんだ）！おまん（あなた）は一人じゃきにない！ワシがいつでもここで話を聞くき、どんと構えておればえい。あったかいお茶でも飲んで、一息入れようや！';
+    } else if (text.contains('疲れた') || text.contains('しんどい') || text.contains('辛い')) {
+      response = '真っ直ぐに進んどる証拠ぜよ！よう頑張っちゅう、よう頑張っちゅう。今は大きなクジラになったつもりで、ゆったり横になって体を休める時ちや。明日になれば、また新しい風が吹くぜよ！';
+    } else if (text.contains('眠れない') || text.contains('ねむれない') || text.contains('不安')) {
+      response = '夜は静かすぎて色々考えてしまうものちや。そんな時は無理に寝ようとせんでえい！太平洋の大きな海を思い浮かべてみぃ。おまんの悩みなんて、あの海に比べたらちっぽけなものぜよ。大丈夫、明けない夜はないきに。';
+    } else if (text.contains('元気') || text.contains('うれしい') || text.contains('楽しい')) {
+      response = 'おおの！それはこじゃんと（とても）嬉しいのう！おまんが笑顔でおってくれるのが、ワシにとっては一番の喜びぜよ！その調子で、今日も一日を大いに楽しんでいこうや！';
+    } else {
+      response = 'なるほど、なるほど！おまんの気持ちは、この坂本龍馬がしっかりと受け止めたぜよ！世の人は我を何とも言わば言え、我が成す事は我のみぞ知る。一歩ずつ、自分を信じて進めばえいちや！';
+    }
+
     setState(() {
-      if (_controller.text.isEmpty) {
-        _praiseMessage = '一文字でも書くと、素敵な思い出になりますよ。';
-      } else {
-        DateTime now = DateTime.now();
-        String dateStr = '${now.month}月${now.day}日';
-
-        savedDiaries.insert(0, {
-          'date': dateStr,
-          'content': _controller.text,
-        });
-
-        final random = Random();
-        _praiseMessage = _praiseList[random.nextInt(_praiseList.length)];
-        
-        _controller.clear();
-      }
+      _ryomaResponse = response;
+      _chatController.clear();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('今日の日記', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: Colors.teal,
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              const Text('今日あったことや、嬉しかったことを\n自由に書いてみてくださいね。',
-                style: TextStyle(fontSize: 20, color: Colors.black87), textAlign: TextAlign.center),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _controller,
-                maxLines: 6,
-                style: const TextStyle(fontSize: 22),
-                decoration: const InputDecoration(
-                  hintText: '例：今日は孫から電話が来て嬉しかった。',
-                  border: OutlineInputBorder(),
-                  fillColor: Colors.white,
-                  filled: true,
-                ),
-              ),
-              const SizedBox(height: 25),
-              ElevatedButton.icon(
-                onPressed: _saveDiary,
-                icon: const Icon(Icons.check_circle, size: 30, color: Colors.white),
-                label: const Text('書き終わった（保存）', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                ),
-              ),
-              const SizedBox(height: 30),
-              if (_praiseMessage.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.orange, width: 2),
-                  ),
-                  child: Text(_praiseMessage, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.deepOrange), textAlign: TextAlign.center),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// -----------------------------------------
-// 画面2：過去の日記を振り返る画面
-// -----------------------------------------
-class DiaryHistoryScreen extends StatelessWidget {
-  const DiaryHistoryScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    DateTime now = DateTime.now();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('思い出の記録', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: Colors.teal,
-        centerTitle: true,
-      ),
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: Padding(
-        padding: const EdgeInsets.all(15.0),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Card(
-              color: Colors.teal.shade50,
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(15.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.calendar_month, color: Colors.teal, size: 30),
-                    const SizedBox(width: 10),
-                    Text(
-                      '${now.year}年 ${now.month}月の日記帳',
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.teal),
+            // 龍馬さんの見た目（侍アイコンとメッセージ）
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.brown[100],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.brown[300]!, width: 2),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.brown[800],
+                    radius: 30,
+                    child: const Icon(Icons.accessibility_new, size: 35, color: Colors.white), // 侍の立ち姿をイメージ
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '坂本龍馬',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.brown),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _ryomaResponse,
+                          style: const TextStyle(fontSize: 18, height: 1.4, fontWeight: FontWeight.w500),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 15),
-            const Text('これまでに書いた日記の一覧です', style: TextStyle(fontSize: 16, color: Colors.black54)),
+            const SizedBox(height: 25),
+            const Text(
+              '龍馬にメッセージを送るぜよ',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
-            
-            if (savedDiaries.isEmpty)
-              const Expanded(
-                child: Center(
-                  child: Text('まだ日記がありません。\n最初の１ページを書いてみましょう！',
-                    style: TextStyle(fontSize: 20, color: Colors.black38), textAlign: TextAlign.center),
-                ),
+            TextField(
+              controller: _chatController,
+              style: const TextStyle(fontSize: 18),
+              decoration: InputDecoration(
+                hintText: '例：ちょっと寂しい、疲れたよ',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.white,
               ),
-            
-            if (savedDiaries.isNotEmpty)
-              Expanded(
-                child: ListView.builder(
-                  itemCount: savedDiaries.length,
-                  itemBuilder: (context, index) {
-                    final diary = savedDiaries[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.teal,
-                          child: Text(diary['date']!.split('月')[1].replaceAll('日', ''),
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        ),
-                        title: Text(diary['date']!, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal)),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 5.0),
-                          child: Text(diary['content']!, style: const TextStyle(fontSize: 22, color: Colors.black87)),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: _getRyomaResponse,
+              icon: const Icon(Icons.send, color: Colors.white),
+              label: const Text('龍馬におはなしする', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber[800],
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
+            ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// -----------------------------------------
-// 画面3：【AI風】言葉を理解して返事をくれる相談画面
-// -----------------------------------------
-class ConsultationScreen extends StatefulWidget {
-  const ConsultationScreen({super.key});
-
-  @override
-  State<ConsultationScreen> createState() => _ConsultationScreenState();
-}
-
-class _ConsultationScreenState extends State<ConsultationScreen> {
-  final TextEditingController _adviceController = TextEditingController();
-  String _answerMessage = 'こんにちは！おはなし相手のくまさんです。不安なこと、眠れないこと、嬉しかったこと、何でもお話ししてくださいね。';
-
-  void _getAdvice() {
-    setState(() {
-      String userInput = _adviceController.text;
-      if (userInput.isEmpty) {
-        _answerMessage = '何かお話ししたいことを書いてみてくださいね。いつでも聴きますよ。🐻';
-        return;
-      }
-
-      // 言葉を判定する仕組み
-      if (userInput.contains('眠れない') || userInput.contains('ねむれない') || userInput.contains('睡眠')) {
-        _answerMessage = '夜に眠れないのは辛いですね…。温かい白湯を飲んだり、軽いストレッチをすると体がリラックスしますよ。今夜はゆっくり休めますように。';
-      } else if (userInput.contains('寂しい') || userInput.contains('さびしい') || userInput.contains('一人')) {
-        _answerMessage = '寂しい時はいつでも私に話しかけてください。私はずっとここにいて、あなたのお話を楽しみに待っていますよ。一人じゃないですからね。🐻';
-      } else if (userInput.contains('疲れた') || userInput.contains('つかれた') || userInput.contains('しんどい')) {
-        _answerMessage = '今日まで一生懸命がんばった証拠ですね。本当にお疲れ様です。今は荷物を全部おろして、のんびり美味しいものでも食べてくださいね。☕';
-      } else if (userInput.contains('嬉しい') || userInput.contains('うれしい') || userInput.contains('楽し')) {
-        _answerMessage = 'わぁ、それを聞いて私まで心がポカポカ嬉しくなっちゃいました！素敵な出来事を教えてくれてありがとうございます！✨';
-      } else {
-        _answerMessage = 'お話ししてくれてありがとうございます。あなたの言葉、しっかり届きましたよ。どんな時も私はあなたの味方ですからね。';
-      }
-      
-      _adviceController.clear();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('おはなし相談室', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: Colors.purple.shade400,
-        centerTitle: true,
-      ),
-      backgroundColor: const Color(0xFFF9F6F9),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.purple.shade200, width: 2),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.purple.shade100,
-                      radius: 25,
-                      child: const Text('🐻', style: TextStyle(fontSize: 30)),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Text(
-                        _answerMessage,
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 35),
-              TextField(
-                controller: _adviceController,
-                maxLines: 4,
-                style: const TextStyle(fontSize: 22),
-                decoration: InputDecoration(
-                  hintText: '例：最近眠れない、寂しい、こんな嬉しいことがあった、など',
-                  border: const OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.purple.shade400, width: 2)),
-                  fillColor: Colors.white,
-                  filled: true,
-                ),
-              ),
-              const SizedBox(height: 25),
-              ElevatedButton.icon(
-                onPressed: _getAdvice,
-                icon: const Icon(Icons.favorite, size: 28, color: Colors.white),
-                label: const Text('くまさんに話してみる', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple.shade400,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
