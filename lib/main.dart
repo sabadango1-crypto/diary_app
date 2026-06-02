@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '龍馬の日記＆激励アプリ',
+      title: '龍馬の日記＆AI激励アプリ',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.amber,
@@ -26,22 +27,10 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const DefaultTabController(
-      length: 2,
-      child: HomeScreenContent(),
-    );
-  }
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class HomeScreenContent extends StatefulWidget {
-  const HomeScreenContent({super.key});
-
-  @override
-  State<HomeScreenContent> createState() => _HomeScreenContentState();
-}
-
-class _HomeScreenContentState extends State<HomeScreenContent> {
+class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final List<String> _diaries = ['5月30日：今日は天気が良かったき、近所を散歩した。'];
   final TextEditingController _diaryController = TextEditingController();
@@ -68,7 +57,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _selectedIndex == 0 ? '💻 龍馬の思い出日記帳' : '⚔️ 龍馬の激励おはなし室',
+          _selectedIndex == 0 ? '💻 龍馬の思い出日記帳' : '⚔️ 龍馬のAI激励おはなし室',
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.brown[700],
@@ -177,29 +166,56 @@ class RyomaConsultationPage extends StatefulWidget {
 class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
   final TextEditingController _chatController = TextEditingController();
   String _ryomaResponse = 'おう、待っとったぞ！悩みがあるなら、何でもワシに言うてみぃ！日本の夜明けは近いぜよ！';
+  bool _isLoading = false; // AIが考えている最中にぐるぐるを回すための合図
 
-  void _getRyomaResponse() {
+  // ★ここを「キーワード反応」から「本物のAI（Gemini）」に大改造しました！
+  Future<void> _getRyomaAIResponse() async {
     String text = _chatController.text;
     if (text.isEmpty) return;
 
-    String response = '';
+    // ⚠️ ここにあなたが取得した「秘密のカギ（AI StudioのAPIキー）」を貼り付けてください！
+    final String _apiKey = 'AIzaSyACHZSWr14-4DpS9j2xh7DDAa3HqgvJSZ8';
 
-    if (text.contains('寂しい') || text.contains('さびしい') || text.contains('一人')) {
-      response = '何をおうちゅう（何を言っているんだ）！おまん（あなた）は一人じゃきにない！ワシがいつでもここで話を聞くき、どんと構えておればえい。あったかいお茶でも飲んで、一息入れようや！';
-    } else if (text.contains('疲れた') || text.contains('しんどい') || text.contains('辛い')) {
-      response = '真っ直ぐに進んどる証拠ぜよ！よう頑張っちゅう、よう頑張っちゅう。今は大きなクジラになったつもりで、ゆったり横になって体を休める時ちや。明日になれば、また新しい風が吹くぜよ！';
-    } else if (text.contains('眠れない') || text.contains('ねむれない') || text.contains('不安')) {
-      response = '夜は静かすぎて色々考えてしまうものちや。そんな時は無理に寝ようとせんでえい！太平洋の大きな海を思い浮かべてみぃ。おまんの悩みなんて、あの海に比べたらちっぽけなものぜよ。大丈夫、明けない夜はないきに。';
-    } else if (text.contains('元気') || text.contains('うれしい') || text.contains('楽しい')) {
-      response = 'おおの！それはこじゃんと（とても）嬉しいのう！おまんが笑顔でおってくれるのが、ワシにとっては一番の喜びぜよ！その調子で、今日も一日を大いに楽しんでいこうや！';
-    } else {
-      response = 'なるほど、なるほど！おまんの気持ちは、この坂本龍馬がしっかりと受け止めたぜよ！世の人は我を何とも言わば言え、我が成す事は我のみぞ知る。一歩ずつ、自分を信じて進めばえいちや！';
+    if (_apiKey == 'ここに秘密のカギを貼り付けてね') {
+      setState(() {
+        _ryomaResponse = '（…おっと、プログラムに「秘密のカギ」を貼り付けるのを忘れちゅうみたいぜよ！カギを貼ってからもう一度話しかけてみぃ！）';
+      });
+      return;
     }
 
     setState(() {
-      _ryomaResponse = response;
+      _isLoading = true;
       _chatController.clear();
     });
+
+    try {
+      // AIモデルの準備
+      final model = GenerativeModel(
+        model: 'gemini-1.5-flash',
+        apiKey: _apiKey,
+        // 龍馬さんになりきってもらうための設定（プロンプト）
+        systemInstruction: Content.system(
+          'あなたは「坂本龍馬」です。高齢者（シニア）の方の毎日の寂しさや不安、嬉しかったことなどを優しく、豪快に聞き、全力で励ますおはなし相手です。'
+          '言葉遣いは必ず温かい「土佐弁」にしてください。（例：〜ぜよ、〜ちや、〜きに、おおの！、おまん、ワシなど）'
+          '相手を置いてけぼりにせず、しっかりと共感し、日本の夜明けを信じたあなたらしく、どんと構えて元気づける言葉を2〜3行で返してください。'
+        ),
+      );
+
+      final content = [Content.text(text)];
+      final response = await model.generateContent(content);
+
+      setState(() {
+        _ryomaResponse = response.text ?? 'ちょっと風の向きが変わったようちや。もう一度話しかけてみてくれんか？';
+      });
+    } catch (e) {
+      setState(() {
+        _ryomaResponse = 'すまん、今は少し通信の調子が悪いようぜよ。時間を置いてもう一回試してみてつかあさい！';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -220,7 +236,6 @@ class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ★誰のスマホ（Web）でもセキュリティエラーにならず、確実に本物の坂本龍馬の写真が表示される専用リンクに置き換えました！
                   const CircleAvatar(
                     radius: 35,
                     backgroundColor: Colors.brown,
@@ -238,10 +253,20 @@ class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.brown),
                         ),
                         const SizedBox(height: 6),
-                        Text(
-                          _ryomaResponse,
-                          style: const TextStyle(fontSize: 18, height: 1.4, fontWeight: FontWeight.w500),
-                        ),
+                        // AIが考えている間は、文字の代わりに「ぐるぐる」を表示します
+                        _isLoading
+                            ? const Padding(
+                                padding: EdgeInsets.only(top: 8.0),
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(color: Colors.brown, strokeWidth: 3),
+                                ),
+                              )
+                            : Text(
+                                _ryomaResponse,
+                                style: const TextStyle(fontSize: 18, height: 1.4, fontWeight: FontWeight.w500),
+                              ),
                       ],
                     ),
                   ),
@@ -256,9 +281,10 @@ class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
             const SizedBox(height: 10),
             TextField(
               controller: _chatController,
+              enabled: !_isLoading,
               style: const TextStyle(fontSize: 18),
               decoration: InputDecoration(
-                hintText: '例：ちょっと寂しい、疲れたよ',
+                hintText: '例：今日はお孫さんが来たよ、少し寂しいな',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: Colors.white,
@@ -266,7 +292,7 @@ class _RyomaConsultationPageState extends State<RyomaConsultationPage> {
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
-              onPressed: _getRyomaResponse,
+              onPressed: _isLoading ? null : _getRyomaAIResponse,
               icon: const Icon(Icons.send, color: Colors.white),
               label: const Text('龍馬におはなしする', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
               style: ElevatedButton.styleFrom(

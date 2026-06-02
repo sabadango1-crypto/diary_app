@@ -1,18 +1,21 @@
-name: texture
+name: diary_app
+description: "A new Flutter project for senior diary and AI Ryoma talk."
+publish_to: 'none'
+version: 1.0.0+1
 
 environment:
-  sdk: ^3.9.0-0
-
-resolution: workspace
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-
+  cupertino_icons: ^1.0.2
+  google_generative_ai: ^0.4.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^2.0.0
 
-
-# PUBSPEC CHECKSUM: 60tfp7
+flutter:
+  uses-material-design: true
